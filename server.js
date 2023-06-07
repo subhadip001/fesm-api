@@ -6,8 +6,11 @@ var nodemailer = require("nodemailer");
 var jsonParser = bodyParser.json();
 const cors = require("cors");
 const app = express();
+require("dotenv").config();
 
-const url = `mongodb+srv://mandv2706:BYnZXArrZeKREo0B@cluster0.fvhyy5a.mongodb.net/?retryWrites=true&w=majority`;
+const url = process.env.MONGO_URI;
+const PORT = process.env.PORT || 8080;
+
 var transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -35,7 +38,6 @@ app.post("/login", jsonParser, async (req, res) => {
     req.body.email === "fesem@admin.iitr" &&
     req.body.password === "@.fesemiitr2023!"
   ) {
-    
     res.send({
       admin: "yes",
     });
@@ -81,7 +83,6 @@ app.get("/book/fetch", jsonParser, async (req, res) => {
       arr.push({ bookingCode: item.bookingCode });
     });
     res.send({ array: arr });
-    
   }
 });
 
@@ -119,7 +120,6 @@ const bookSchema = {
 
 const BookDetails = mongoose.model("BookingDetails", bookSchema);
 app.post("/book", jsonParser, function (req, res) {
-  
   var today = new Date();
   const date = `${today.getFullYear()}-${("0" + (today.getMonth() + 1)).slice(
     -2
