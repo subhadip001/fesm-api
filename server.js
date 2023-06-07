@@ -1,14 +1,20 @@
 const mongoose = require("mongoose");
 const express = require("express");
 var bodyParser = require("body-parser");
+var nodemailer = require("nodemailer");
 // create application/json parser
 var jsonParser = bodyParser.json();
 const cors = require("cors");
 const app = express();
-require("dotenv").config();
 
-const url = process.env.MONGO_URI
-const PORT = process.env.PORT || 8080;
+const url = `mongodb+srv://mandv2706:BYnZXArrZeKREo0B@cluster0.fvhyy5a.mongodb.net/?retryWrites=true&w=majority`;
+var transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "fesem.iitroorkee@gmail.com",
+    pass: "vxmaotuyzbzizznf",
+  },
+});
 
 const connectionParams = {
   useNewUrlParser: true,
@@ -25,18 +31,31 @@ mongoose
 app.use(cors());
 app.post("/login", jsonParser, async (req, res) => {
   var query = { stuEmail: req.body.email, pass: req.body.password };
-  const result = await User.find(query);
-  if (!result || result.length === 0) res.status(400).send({ token: null });
-  else {
-    require("crypto").randomBytes(48, function (err, buffer) {
-      var token = buffer.toString("hex");
-      res.send({
-        token: token,
-        name: result[0].stuName,
-        email: result[0].stuEmail,
-        dept: result[0].stuDept,
-      });
+  if (
+    req.body.email === "fesem@admin.iitr" &&
+    req.body.password === "@.fesemiitr2023!"
+  ) {
+    
+    res.send({
+      admin: "yes",
     });
+  } else {
+    const result = await User.find(query);
+    if (!result || result.length === 0) res.status(400).send({ token: null });
+    else {
+      require("crypto").randomBytes(48, function (err, buffer) {
+        var token = buffer.toString("hex");
+
+        res.send({
+          token: token,
+          name: result[0].stuName,
+          email: result[0].stuEmail,
+          dept: result[0].stuDept,
+          enrollNo: result[0].enrollNo,
+          contactNo: result[0].stuMobNo,
+        });
+      });
+    }
   }
 });
 app.get("/book/fetch", jsonParser, async (req, res) => {
@@ -62,7 +81,7 @@ app.get("/book/fetch", jsonParser, async (req, res) => {
       arr.push({ bookingCode: item.bookingCode });
     });
     res.send({ array: arr });
-    console.log(arr);
+    
   }
 });
 
@@ -100,7 +119,7 @@ const bookSchema = {
 
 const BookDetails = mongoose.model("BookingDetails", bookSchema);
 app.post("/book", jsonParser, function (req, res) {
-  console.log(req.body);
+  
   var today = new Date();
   const date = `${today.getFullYear()}-${("0" + (today.getMonth() + 1)).slice(
     -2
@@ -121,6 +140,41 @@ app.post("/book", jsonParser, function (req, res) {
     .save()
     .then(console.log("success " + book))
     .catch((e) => console.log(e));
+  var mailOptions2 = {
+    from: "fesem.iitroorkee@gmail.com",
+    to: `${req.body.userEmail}`,
+    subject: "Booking Done!",
+    html: `<h1>Succesfully booked the slot on ${
+      req.body.bookingTime.split("_")[0]
+    }</h1><br/><p>Your booking has been done. Please do the payment as soon as you are notified by the office</p>`,
+  };
+  var mailOptions3 = {
+    from: "fesem.iitroorkee@gmail.com",
+    to: `fesem.iitroorkee@gmail.com`,
+    subject: "Booking Done!",
+    html: `<h1>User ${req.body.userName} succesfully booked the slot on ${
+      req.body.bookingTime.split("_")[0]
+    }</h1><br/><p>Details</p><br/><p>Email : ${
+      req.body.userEmail
+    }</p><br/><p>Service : ${req.body.service}</p><br/><p>Dept : ${
+      req.body.userDept
+    }</p><br/><p>Booking Done At: : ${date}</p>`,
+  };
+
+  transporter.sendMail(mailOptions2, function (error, info) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent: " + info.response);
+    }
+  });
+  transporter.sendMail(mailOptions3, function (error, info) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent: " + info.response);
+    }
+  });
 });
 
 app.post("/admin/delete", jsonParser, async (req, res) => {
@@ -128,11 +182,8 @@ app.post("/admin/delete", jsonParser, async (req, res) => {
   res.send(result);
 });
 
-
-
 const User = mongoose.model("Users", tableSchema);
 app.post("/register", jsonParser, function (req, res) {
-  console.log(req.body);
   const user = new User({
     userType: req.body.userType,
     stuName: req.body.name,
@@ -150,6 +201,21 @@ app.post("/register", jsonParser, function (req, res) {
     .save()
     .then(console.log("success"))
     .catch((e) => console.log(e));
+  var mailOptions = {
+    from: "fesem.iitroorkee@gmail.com",
+    to: "fesem.iitroorkee@gmail.com",
+    subject: "New Registration!",
+    html: `<h1>A new user has been registered</h1><br/><p>User Name : ${req.body.name}</p><br/><p>Email : ${req.body.email}</p><br/><p>Enroll No : ${req.body.enroll}</p><br/><p>Dept : ${req.body.userType}</p><br/><p>Contact No. : ${req.body.mobile}</p>`,
+  };
+  transporter.sendMail(mailOptions, function (error, info) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent: " + info.response);
+    }
+  });
 });
 
-app.listen(PORT, () => console.log("API is running on http://localhost:8080"));
+app.listen(8080, () => console.log("API is running on http://localhost:8080"));
+
+//vxmaotuyzbzizznf
