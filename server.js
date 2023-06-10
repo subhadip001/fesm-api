@@ -211,7 +211,8 @@ app.post("/admin/delete", jsonParser, async (req, res) => {
 const User = mongoose.model("Users", tableSchema);
 app.post("/register", jsonParser, async function (req, res) {
   const result = await User.find({ stuEmail: req.body.email });
-  if (result.length !== 0 || result != null) {
+  console.log(result);
+  if (result.length !== 0) {
     return res.status(400).send({
       message: "This is an error!",
     });
@@ -236,7 +237,7 @@ app.post("/register", jsonParser, async function (req, res) {
       .catch((e) => console.log(e));
     var mailOptions = {
       from: "fesem.iitroorkee@gmail.com",
-      to: "fesem.iitroorkee@gmail.com,fesem@me.iitr.ac.in",
+      to: "fesem.iitroorkee@gmail.com,mnhacker2001@gmail.com",
       subject: "New Registration!",
       html: `<h1>A new user has been registered</h1><br/><p>User Name : ${req.body.name}</p><br/><p>Email : ${req.body.email}</p><br/><p>Enroll No : ${req.body.enroll}</p><br/><p>Dept : ${req.body.userType}</p><br/><p>Contact No. : ${req.body.mobile}</p>`,
     };
@@ -246,8 +247,8 @@ app.post("/register", jsonParser, async function (req, res) {
       } else {
         console.log("Email sent: " + info.response);
       }
-    });
-  }
+    });
+  }
 });
 
 app.listen(PORT, () => console.log("API is running on port " + PORT));
