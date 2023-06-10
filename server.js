@@ -175,7 +175,7 @@ app.post("/book", jsonParser, async function (req, res) {
   };
   var mailOptions3 = {
     from: "fesem.iitroorkee@gmail.com",
-    to: ` fesem@me.iitr.ac.in`,
+    to: ` mnhacker2001@gmail.com`,
     subject: "Booking Done!",
     html: `<h1>User ${req.body.userName} succesfully booked the slot on ${
       req.body.bookingTime.split("_")[0]
