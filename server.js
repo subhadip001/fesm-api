@@ -11,12 +11,15 @@ require("dotenv").config();
 
 const url = process.env.MONGO_URI;
 const PORT = process.env.PORT || 8080;
+console.log(url);
+
+
 
 var today = new Date();
 const date = `${today.getFullYear()}-${("0" + (today.getMonth() + 1)).slice(
   -2
 )}-${("0" + today.getDate()).slice(-2)}`;
-const url = `mongodb+srv://mandv2706:BYnZXArrZeKREo0B@cluster0.fvhyy5a.mongodb.net/?retryWrites=true&w=majority`;
+
 var transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -79,6 +82,7 @@ app.post("/login", jsonParser, async (req, res) => {
     }
   }
 });
+
 app.get("/book/fetch", jsonParser, async (req, res) => {
   var today = new Date();
   var today2 = new Date();
