@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const express = require("express");
 var bodyParser = require("body-parser");
 var nodemailer = require("nodemailer");
+const cron = require("node-cron");
 // create application/json parser
 var jsonParser = bodyParser.json();
 const cors = require("cors");
@@ -11,12 +12,28 @@ require("dotenv").config();
 const url = process.env.MONGO_URI;
 const PORT = process.env.PORT || 8080;
 
+var today = new Date();
+const date = `${today.getFullYear()}-${("0" + (today.getMonth() + 1)).slice(
+  -2
+)}-${("0" + today.getDate()).slice(-2)}`;
+const url = `mongodb+srv://mandv2706:BYnZXArrZeKREo0B@cluster0.fvhyy5a.mongodb.net/?retryWrites=true&w=majority`;
 var transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: "fesem.iitroorkee@gmail.com",
     pass: "vxmaotuyzbzizznf",
   },
+});
+
+cron.schedule("0 0 * * 1", async () => {
+  try {
+    // Reset bookingsAvailableThisWeek field to 1 for all users
+    await User.updateMany({}, { bookingsAvailableThisWeek: 1 });
+
+    console.log("Bookings availability reset for all users.");
+  } catch (err) {
+    console.error("Error resetting bookings availability:", err);
+  }
 });
 
 const connectionParams = {
@@ -50,11 +67,13 @@ app.post("/login", jsonParser, async (req, res) => {
 
         res.send({
           token: token,
+          id: result[0]._id,
           name: result[0].stuName,
           email: result[0].stuEmail,
           dept: result[0].stuDept,
           enrollNo: result[0].enrollNo,
           contactNo: result[0].stuMobNo,
+          bookingsAvailableThisWeek: result[0].bookingsAvailableThisWeek,
         });
       });
     }
@@ -76,7 +95,7 @@ app.get("/book/fetch", jsonParser, async (req, res) => {
     createdAt: { $gte: new Date(prevDate), $lte: new Date(date) },
   };
   const result = await BookDetails.find(query);
-  if (!result || result.length === 0) res.status(400).send({ token: null });
+  if (!result || result.length === 0) res.send({ token: null });
   else {
     const arr = [];
     result.map((item) => {
@@ -87,7 +106,7 @@ app.get("/book/fetch", jsonParser, async (req, res) => {
 });
 
 app.get("/admin/fetch", jsonParser, async (req, res) => {
-  const result = await BookDetails.find({ approved: "no" });
+  const result = await BookDetails.find();
   res.send(result);
 });
 
@@ -103,6 +122,7 @@ const tableSchema = {
   date: String,
   supName: String,
   supDept: String,
+  bookingsAvailableThisWeek: String,
 };
 
 const bookSchema = {
@@ -119,11 +139,12 @@ const bookSchema = {
 };
 
 const BookDetails = mongoose.model("BookingDetails", bookSchema);
-app.post("/book", jsonParser, function (req, res) {
-  var today = new Date();
-  const date = `${today.getFullYear()}-${("0" + (today.getMonth() + 1)).slice(
-    -2
-  )}-${("0" + today.getDate()).slice(-2)}`;
+
+app.post("/book", jsonParser, async function (req, res) {
+  await User.updateOne(
+    { _id: req.body.id },
+    { $set: { bookingsAvailableThisWeek: 0 } }
+  );
   const book = new BookDetails({
     userName: req.body.userName,
     userEmail: req.body.userEmail,
@@ -150,7 +171,7 @@ app.post("/book", jsonParser, function (req, res) {
   };
   var mailOptions3 = {
     from: "fesem.iitroorkee@gmail.com",
-    to: `fesem.iitroorkee@gmail.com`,
+    to: ` fesem@me.iitr.ac.in`,
     subject: "Booking Done!",
     html: `<h1>User ${req.body.userName} succesfully booked the slot on ${
       req.body.bookingTime.split("_")[0]
@@ -160,21 +181,22 @@ app.post("/book", jsonParser, function (req, res) {
       req.body.userDept
     }</p><br/><p>Booking Done At: : ${date}</p>`,
   };
-
-  transporter.sendMail(mailOptions2, function (error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent: " + info.response);
-    }
-  });
-  transporter.sendMail(mailOptions3, function (error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent: " + info.response);
-    }
-  });
+  if (req.body.userName !== "admin") {
+    transporter.sendMail(mailOptions2, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
+    transporter.sendMail(mailOptions3, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
+  }
 });
 
 app.post("/admin/delete", jsonParser, async (req, res) => {
@@ -183,37 +205,45 @@ app.post("/admin/delete", jsonParser, async (req, res) => {
 });
 
 const User = mongoose.model("Users", tableSchema);
-app.post("/register", jsonParser, function (req, res) {
-  const user = new User({
-    userType: req.body.userType,
-    stuName: req.body.name,
-    stuEmail: req.body.email,
-    pass: req.body.pass,
-    enrollNo: req.body.enroll,
-    stuDept: req.body.dept,
-    stuMobNo: req.body.mobile,
-    program: req.body.program,
-    date: req.body.date,
-    supName: req.body.supervisor,
-    supDept: req.body.supervisorDept,
-  });
-  user
-    .save()
-    .then(console.log("success"))
-    .catch((e) => console.log(e));
-  var mailOptions = {
-    from: "fesem.iitroorkee@gmail.com",
-    to: "fesem.iitroorkee@gmail.com",
-    subject: "New Registration!",
-    html: `<h1>A new user has been registered</h1><br/><p>User Name : ${req.body.name}</p><br/><p>Email : ${req.body.email}</p><br/><p>Enroll No : ${req.body.enroll}</p><br/><p>Dept : ${req.body.userType}</p><br/><p>Contact No. : ${req.body.mobile}</p>`,
-  };
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent: " + info.response);
-    }
-  });
+app.post("/register", jsonParser, async function (req, res) {
+  const result = await User.find({ stuEmail: req.body.email });
+  if (result.length !== 0 || result != null) {
+    return res.status(400).send({
+      message: "This is an error!",
+    });
+  } else {
+    const user = new User({
+      userType: req.body.userType,
+      stuName: req.body.name,
+      stuEmail: req.body.email,
+      pass: req.body.pass,
+      enrollNo: req.body.enroll,
+      stuDept: req.body.dept,
+      stuMobNo: req.body.mobile,
+      program: req.body.program,
+      date: req.body.date,
+      supName: req.body.supervisor,
+      supDept: req.body.supervisorDept,
+      bookingsAvailableThisWeek: 1,
+    });
+    user
+      .save()
+      .then(console.log("success"))
+      .catch((e) => console.log(e));
+    var mailOptions = {
+      from: "fesem.iitroorkee@gmail.com",
+      to: "fesem.iitroorkee@gmail.com,fesem@me.iitr.ac.in",
+      subject: "New Registration!",
+      html: `<h1>A new user has been registered</h1><br/><p>User Name : ${req.body.name}</p><br/><p>Email : ${req.body.email}</p><br/><p>Enroll No : ${req.body.enroll}</p><br/><p>Dept : ${req.body.userType}</p><br/><p>Contact No. : ${req.body.mobile}</p>`,
+    };
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
+  }
 });
 
 app.listen(PORT, () => console.log("API is running on port " + PORT));
