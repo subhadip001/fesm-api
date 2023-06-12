@@ -13,8 +13,6 @@ const url = process.env.MONGO_URI;
 const PORT = process.env.PORT || 8080;
 console.log(url);
 
-
-
 var today = new Date();
 const date = `${today.getFullYear()}-${("0" + (today.getMonth() + 1)).slice(
   -2
@@ -173,17 +171,24 @@ app.post("/book", jsonParser, async function (req, res) {
       req.body.bookingTime.split("_")[0]
     }</h1><br/><p>Your booking has been done. Please do the payment as soon as you are notified by the office</p>`,
   };
+  var pri = req.body.price;
+  var x = "no";
+  if (pri == 75 || pri == 125) {
+    x = "yes";
+  }
   var mailOptions3 = {
     from: "fesem.iitroorkee@gmail.com",
-    to: ` mnhacker2001@gmail.com`,
+    to: ` fesem@me.iitr.ac.in`,
     subject: "Booking Done!",
     html: `<h1>User ${req.body.userName} succesfully booked the slot on ${
       req.body.bookingTime.split("_")[0]
     }</h1><br/><p>Details</p><br/><p>Email : ${
       req.body.userEmail
-    }</p><br/><p>Service : ${req.body.service}</p><br/><p>Dept : ${
+    }</p><br/><p>Service : ${
+      req.body.service
+    }</p><br/><p>Coating: ${x}</p><br/><p>Dept : ${
       req.body.userDept
-    }</p><br/><p>Booking Done At: : ${date}</p>`,
+    }</p><br/><p>Price: ${pri}</p><br/><p>Booking Done At: : ${date}</p>`,
   };
   if (req.body.userName !== "admin") {
     transporter.sendMail(mailOptions2, function (error, info) {
@@ -247,8 +252,8 @@ app.post("/register", jsonParser, async function (req, res) {
       } else {
         console.log("Email sent: " + info.response);
       }
-    });
-  }
+    });
+  }
 });
 
 app.listen(PORT, () => console.log("API is running on port " + PORT));
