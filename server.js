@@ -10,8 +10,7 @@ const app = express();
 require("dotenv").config();
 
 const url = process.env.MONGO_URI;
-const PORT = process.env.PORT || 8080;
-console.log(url);
+const PORT = process.env.PORT || 5000;
 
 var today = new Date();
 const date = `${today.getFullYear()}-${("0" + (today.getMonth() + 1)).slice(
