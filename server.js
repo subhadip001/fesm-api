@@ -49,7 +49,7 @@ mongoose
     console.error(`Error connecting to the database. n${err}`);
   });
 app.use(cors());
-app.post("/login", jsonParser, async (req, res) => {
+app.post("/fesem/login", jsonParser, async (req, res) => {
   var query = { stuEmail: req.body.email, pass: req.body.password };
   if (
     req.body.email === "fesem@admin.iitr" &&
@@ -80,7 +80,7 @@ app.post("/login", jsonParser, async (req, res) => {
   }
 });
 
-app.get("/book/fetch", jsonParser, async (req, res) => {
+app.get("/fesem/book/fetch", jsonParser, async (req, res) => {
   var today = new Date();
   var today2 = new Date();
   today.setDate(today.getDate() + 1);
@@ -141,7 +141,7 @@ const bookSchema = {
 
 const BookDetails = mongoose.model("BookingDetails", bookSchema);
 
-app.post("/book", jsonParser, async function (req, res) {
+app.post("/fesem/book", jsonParser, async function (req, res) {
   await User.updateOne(
     { _id: req.body.id },
     { $set: { bookingsAvailableThisWeek: 0 } }
@@ -207,13 +207,13 @@ app.post("/book", jsonParser, async function (req, res) {
   }
 });
 
-app.post("/admin/delete", jsonParser, async (req, res) => {
+app.post("/fesem/admin/delete", jsonParser, async (req, res) => {
   const result = await BookDetails.deleteOne({ _id: req.body.id });
   res.send(result);
 });
 
 const User = mongoose.model("Users", tableSchema);
-app.post("/register", jsonParser, async function (req, res) {
+app.post("/fesem/register", jsonParser, async function (req, res) {
   const result = await User.find({ stuEmail: req.body.email });
   console.log(result);
   if (result.length !== 0) {
