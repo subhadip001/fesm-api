@@ -106,7 +106,7 @@ app.get("/book/fetch", jsonParser, async (req, res) => {
   }
 });
 
-app.get("/admin/fetch", jsonParser, async (req, res) => {
+app.get("/fesem/admin/fetch", jsonParser, async (req, res) => {
   const result = await BookDetails.find();
   res.send(result);
 });
