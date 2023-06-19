@@ -139,17 +139,16 @@ const bookSchema = {
   approved: String,
 };
 
-app.post("/fesem/report",jsonParser,async function (req,res){
+app.post("/fesem/report", jsonParser, async function (req, res) {
   const result = await BookDetails.find({ userEmail: req.body.email });
-  console.log("success"+ req.body.id+ result)
+  console.log("success" + req.body.id + result);
   res.send(result);
+});
 
-})
-
-app.post("/fesem/otp",jsonParser, async function(req,res){
+app.post("/fesem/otp", jsonParser, async function (req, res) {
   const email = req.body.email;
   var otp = Math.random();
-  otp = otp*1000000;
+  otp = otp * 1000000;
   otp = parseInt(otp);
   var mailOptions4 = {
     from: "fesem.iitroorkee@gmail.com",
@@ -165,9 +164,7 @@ app.post("/fesem/otp",jsonParser, async function(req,res){
       console.log("Email sent: " + info.response);
     }
   });
-  res.send({otp: otp});
-
-
+  res.send({ otp: otp });
 });
 const BookDetails = mongoose.model("BookingDetails", bookSchema);
 
@@ -196,7 +193,9 @@ app.post("/fesem/book", jsonParser, async function (req, res) {
     from: "fesem.iitroorkee@gmail.com",
     to: `${req.body.userEmail}`,
     subject: "Booking Done!",
-    html: `<h1>Succesfully booked the slot on ${
+    html: `<h1>Succesfully booked the slot ${
+      req.body.bookingTime.split("_")[1]
+    } on ${
       req.body.bookingTime.split("_")[0]
     }</h1><br/><p>Your booking has been done. Please do the payment as soon as you are notified by the office</p>`,
   };
