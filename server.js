@@ -139,6 +139,36 @@ const bookSchema = {
   approved: String,
 };
 
+app.post("/fesem/report",jsonParser,async function (req,res){
+  const result = await BookDetails.find({ userEmail: req.body.email });
+  console.log("success"+ req.body.id+ result)
+  res.send(result);
+
+})
+
+app.post("/fesem/otp",jsonParser, async function(req,res){
+  const email = req.body.email;
+  var otp = Math.random();
+  otp = otp*1000000;
+  otp = parseInt(otp);
+  var mailOptions4 = {
+    from: "fesem.iitroorkee@gmail.com",
+    to: `${email}`,
+    subject: "OTP for Verification!",
+    html: `<h1>Your OTP(One Time Password) for email verification</h1>
+    <br/><p>Your OTP for email verification is ${otp}.Please do not share this with anyone</p>`,
+  };
+  transporter.sendMail(mailOptions4, function (error, info) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent: " + info.response);
+    }
+  });
+  res.send({otp: otp});
+
+
+});
 const BookDetails = mongoose.model("BookingDetails", bookSchema);
 
 app.post("/fesem/book", jsonParser, async function (req, res) {
