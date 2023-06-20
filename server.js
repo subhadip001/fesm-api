@@ -110,7 +110,7 @@ const tableSchema = {
   bookings: [bookSchema],
 };
 
-app.get("fesem/book/fetch", jsonParser, async (req, res) => {
+app.get("/fesem/book/fetch", jsonParser, async (req, res) => {
   var today = new Date();
   var today2 = new Date();
   today.setDate(today.getDate() + 1);
