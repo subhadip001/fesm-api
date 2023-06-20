@@ -80,6 +80,36 @@ app.post("/fesem/login", jsonParser, async (req, res) => {
   }
 });
 
+const bookSchema = {
+  userName: String,
+  userEmail: String,
+  bookingDate: String,
+  createdAt: Date,
+  userDept: String,
+  slot: String,
+  bookingCode: String,
+  service: String,
+  price: String,
+  approved: String,
+  invoiceUrl: String,
+};
+
+const tableSchema = {
+  userType: String,
+  stuName: String,
+  stuEmail: String,
+  pass: String,
+  enrollNo: String,
+  stuDept: String,
+  stuMobNo: String,
+  program: String,
+  date: String,
+  supName: String,
+  supDept: String,
+  bookingsAvailableThisWeek: String,
+  bookings: [bookSchema],
+};
+
 app.get("/fesem/book/fetch", jsonParser, async (req, res) => {
   var today = new Date();
   var today2 = new Date();
@@ -110,34 +140,6 @@ app.get("/fesem/admin/fetch", jsonParser, async (req, res) => {
   const result = await BookDetails.find();
   res.send(result);
 });
-
-const tableSchema = {
-  userType: String,
-  stuName: String,
-  stuEmail: String,
-  pass: String,
-  enrollNo: String,
-  stuDept: String,
-  stuMobNo: String,
-  program: String,
-  date: String,
-  supName: String,
-  supDept: String,
-  bookingsAvailableThisWeek: String,
-};
-
-const bookSchema = {
-  userName: String,
-  userEmail: String,
-  bookingDate: String,
-  createdAt: Date,
-  userDept: String,
-  slot: String,
-  bookingCode: String,
-  service: String,
-  price: String,
-  approved: String,
-};
 
 app.post("/fesem/report", jsonParser, async function (req, res) {
   const result = await BookDetails.find({ userEmail: req.body.email });
@@ -171,7 +173,7 @@ const BookDetails = mongoose.model("BookingDetails", bookSchema);
 app.post("/fesem/book", jsonParser, async function (req, res) {
   await User.updateOne(
     { _id: req.body.id },
-    { $set: { bookingsAvailableThisWeek: 0 } }
+    { $set: { bookingsAvailableThisWeek: 1 } }
   );
   const book = new BookDetails({
     userName: req.body.userName,
@@ -187,7 +189,9 @@ app.post("/fesem/book", jsonParser, async function (req, res) {
   });
   book
     .save()
-    .then(console.log("success " + book))
+    .then(() => {
+      console.log(book);
+    })
     .catch((e) => console.log(e));
   var mailOptions2 = {
     from: "fesem.iitroorkee@gmail.com",
@@ -281,6 +285,32 @@ app.post("/fesem/register", jsonParser, async function (req, res) {
         console.log("Email sent: " + info.response);
       }
     });
+  }
+});
+
+app.post("/fesem/addInvoice", jsonParser, async function (req, res) {
+  const { userEmail, bookingTime, invoiceUrl } = req.body;
+
+  try {
+    await BookDetails.updateOne(
+      { userEmail, bookingCode: bookingTime },
+      { $set: { invoiceUrl } }
+    );
+    const bookingDetails = await BookDetails.findOne({
+      userEmail,
+      bookingCode: bookingTime,
+    });
+
+    console.log(bookingDetails);
+
+    const user = await User.findOne({ stuEmail: userEmail });
+
+    user.bookings.push(bookingDetails);
+
+    console.log(user);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Internal Server Error" });
   }
 });
 
