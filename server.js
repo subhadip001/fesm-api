@@ -173,7 +173,7 @@ const BookDetails = mongoose.model("BookingDetails", bookSchema);
 app.post("/fesem/book", jsonParser, async function (req, res) {
   await User.updateOne(
     { _id: req.body.id },
-    { $set: { bookingsAvailableThisWeek: 1 } }
+    { $set: { bookingsAvailableThisWeek: 0 } }
   );
   const book = new BookDetails({
     userName: req.body.userName,
