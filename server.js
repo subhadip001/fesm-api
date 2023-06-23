@@ -312,6 +312,28 @@ app.post("/fesem/addInvoice", jsonParser, async function (req, res) {
     console.log(error);
     res.status(500).send({ message: "Internal Server Error" });
   }
+  var mailOptions2 = {
+    from: "fesem.iitroorkee@gmail.com",
+    to: userEmail,
+    subject: "Booking Done!",
+    html: `<p> You have successfully booked the slot on ${bookingTime.split("_")[0]} . Please pay the required charges as soon as you are notified. Reciept is attached for your reference`,
+    attachments: [
+      {   
+          filename: 'invoice.pdf',
+          path : invoiceUrl
+      },
+    ]
+  };
+  if (req.body.userName !== "admin") {
+    transporter.sendMail(mailOptions2, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
+  }
+  
 });
 
 app.listen(PORT, () => console.log("API is running on port " + PORT));
