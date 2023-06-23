@@ -314,6 +314,77 @@ app.post("/fesem/addInvoice", jsonParser, async function (req, res) {
   }
 });
 
+app.post("/fesem/edit", jsonParser, async function (req, res) {
+  await User.updateOne(
+    { _id: req.body.id },
+    {
+      $set: {
+        userType: req.body.credentials.userType,
+        stuName: req.body.credentials.name,
+        pass: req.body.credentials.pass,
+        enrollNo: req.body.credentials.enrollNo,
+        stuMobNo: req.body.credentials.mobile,
+        program: req.body.credentials.program,
+        date: req.body.credentials.date,
+        supName: req.body.credentials.supervisor,
+        supDept: req.body.credentials.supervisorDept,
+      },
+    }
+  );
+  
+  console.log("success");
+  
+  
+});
+
+app.post("/fesem/addInvoice", jsonParser, async function (req, res) {
+  const { userEmail, bookingTime, invoiceUrl } = req.body;
+
+  try {
+    await BookDetails.updateOne(
+      { userEmail, bookingCode: bookingTime },
+      { $set: { invoiceUrl } }
+    );
+    const bookingDetails = await BookDetails.findOne({
+      userEmail,
+      bookingCode: bookingTime,
+    });
+
+    console.log(bookingDetails);
+
+    const user = await User.findOne({ stuEmail: userEmail });
+
+    user.bookings.push(bookingDetails);
+
+    console.log(user);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+  var mailOptions2 = {
+    from: "fesem.iitroorkee@gmail.com",
+    to: userEmail,
+    subject: "Booking Done!",
+    html: `<p> You have successfully booked the slot on ${bookingTime.split("_")[0]} . Please pay the required charges as soon as you are notified. Reciept is attached for your reference`,
+    attachments: [
+      {   
+          filename: 'invoice.pdf',
+          path : invoiceUrl
+      },
+    ]
+  };
+  if (req.body.userName !== "admin") {
+    transporter.sendMail(mailOptions2, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
+  }
+  
+});
+
 app.listen(PORT, () => console.log("API is running on port " + PORT));
 
 //vxmaotuyzbzizznf
