@@ -352,11 +352,11 @@ app.post("/fesem/addInvoice", jsonParser, async function (req, res) {
 
     console.log(bookingDetails);
 
-    const user = await User.findOne({ stuEmail: userEmail });
+    //const user = await User.findOne({ stuEmail: userEmail });
 
-    user.bookings.push(bookingDetails);
+    //user.bookings.push(bookingDetails);
 
-    console.log(user);
+    //console.log(user);
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: "Internal Server Error" });
