@@ -141,6 +141,32 @@ app.get("/fesem/admin/fetch", jsonParser, async (req, res) => {
   res.send(result);
 });
 
+app.post("/fesem/forget", jsonParser, async function (req, res) {
+  const result = await User.find({ stuEmail: req.body.email });
+  if (result.length === 0) {
+    return res.status(400).send({
+      message: "Email ID not registered",
+    });
+  } else {
+    var mailOptions5 = {
+      from: "fesem.iitroorkee@gmail.com",
+      to: `${req.body.email}`,
+      subject: "Password to Login",
+      html: `<h1>Password to Login</h1>
+      <br/><p>Dear ${result[0].stuName}. Your password for login is <span style="font-weight:bold;">${result[0].pass}</span></p>`,
+    };
+    transporter.sendMail(mailOptions5, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
+  }
+
+  console.log("success");
+});
+
 app.post("/fesem/report", jsonParser, async function (req, res) {
   const result = await BookDetails.find({ userEmail: req.body.email });
   console.log("success" + req.body.id + result);
@@ -241,10 +267,24 @@ app.post("/fesem/book", jsonParser, async function (req, res) {
 });
 
 app.post("/fesem/admin/delete", jsonParser, async (req, res) => {
+  const x = await BookDetails.find({ _id: req.body.id });
+  var mailOptions6 = {
+    from: "fesem.iitroorkee@gmail.com",
+    to: `${x[0].userEmail}`,
+    subject: "Your Booking has been canceled",
+    html: `<p> Your Booking has been canceled because of the following reason </p> </br> <p> ${req.body.reason} </p>`,
+  };
+  transporter.sendMail(mailOptions6, function (error, info) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent: " + info.response);
+    }
+  });
+
   const result = await BookDetails.deleteOne({ _id: req.body.id });
   res.send(result);
 });
-
 const User = mongoose.model("Users", tableSchema);
 app.post("/fesem/register", jsonParser, async function (req, res) {
   const result = await User.find({ stuEmail: req.body.email });
@@ -354,10 +394,8 @@ app.post("/fesem/edit", jsonParser, async function (req, res) {
       },
     }
   );
-  
+
   console.log("success");
-  
-  
 });
 
 app.post("/fesem/addInvoice", jsonParser, async function (req, res) {
@@ -388,13 +426,15 @@ app.post("/fesem/addInvoice", jsonParser, async function (req, res) {
     from: "fesem.iitroorkee@gmail.com",
     to: userEmail,
     subject: "Booking Done!",
-    html: `<p> You have successfully booked the slot on ${bookingTime.split("_")[0]} . Please pay the required charges as soon as you are notified. Reciept is attached for your reference`,
+    html: `<p> You have successfully booked the slot on ${
+      bookingTime.split("_")[0]
+    } . Please pay the required charges as soon as you are notified. Reciept is attached for your reference`,
     attachments: [
-      {   
-          filename: 'invoice.pdf',
-          path : invoiceUrl
+      {
+        filename: "invoice.pdf",
+        path: invoiceUrl,
       },
-    ]
+    ],
   };
   if (req.body.userName !== "admin") {
     transporter.sendMail(mailOptions2, function (error, info) {
@@ -405,7 +445,6 @@ app.post("/fesem/addInvoice", jsonParser, async function (req, res) {
       }
     });
   }
-  
 });
 
 app.listen(PORT, () => console.log("API is running on port " + PORT));
